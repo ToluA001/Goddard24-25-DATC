@@ -70,6 +70,22 @@ void printData(DATA data) {
 }
 //end of transducer setup
 
+float calculateAltitude(float pressure) {
+  const float Pb = 101325.0;        // sea level pressure (Pa)
+  const float Tb = 288.15;          // sea level standard temp (K)
+  const float Lb = -0.0065;         // lapse rate (K/m)
+  const float R = 8.31432;          // universal gas constant (J/mol·K)
+  const float g = 9.80665;          // gravity (m/s²)
+  const float M = 0.0289644;        // molar mass of air (kg/mol)
+  const float hb = 0.0;             // sea level reference (m)
+
+  float exponent = -(R * Lb) / (g * M);
+  float ratio = pressure / Pb;
+
+  float altitude = hb + (Tb / Lb) * (pow(ratio, exponent) - 1);
+  return altitude;
+}
+
 RTC_DS3231 rtc;
 
 // You dont *need* a reset and EOC pin for most uses, so we set to -1 and don't connect
@@ -215,7 +231,10 @@ void loop()
   Serial.print(now.second(), DEC);
   Serial.println();*/
 
-  sprintf(line, "Hour: %i, Min: %i, Sec: %i, Pressure: %f, AX: %f, AY: %f, AZ: %f, GX: %f, GY: %f, GY: %f, Humidity: %f, Temp(c): %f, Oxpressure(psi): %f, Transvoltage(V): %f", now.hour(), now.minute(), now.second(), pressure_hPa, accel.acceleration.x, accel.acceleration.y, accel.acceleration.z, gyro.gyro.x, gyro.gyro.y, gyro.gyro.z, RH, temper,data_1.pressure_psi,data_1.voltage);
+    float altitude = calculateAltitude(pressure_hPa*100);
+
+
+  sprintf(line, "Hour: %i, Min: %i, Sec: %i, Pressure: %f, AX: %f, AY: %f, AZ: %f, GX: %f, GY: %f, GY: %f, Humidity: %f, Temp(c): %f, Oxpressure(psi): %f, Transvoltage(V): %f, Altitude(msl, meters): %f", now.hour(), now.minute(), now.second(), pressure_hPa, accel.acceleration.x, accel.acceleration.y, accel.acceleration.z, gyro.gyro.x, gyro.gyro.y, gyro.gyro.z, RH, temper,data_1.pressure_psi,data_1.voltage, altitude);
   Serial.println(line);
 
   while (xbee.available()) 
